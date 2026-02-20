@@ -11,20 +11,22 @@ headers = {
     "Referer": "https://mftplus.com/calendar"
 }
 
-# === 1) گرفتن لیست دپارتمان‌ها ===
-group_params = {"need": "group"}
-res = requests.get(BASE_URL, headers=headers, params=group_params)
-res.raise_for_status()
-groups = res.json()
+# لیست دپارتمان‌ها به صورت دستی
+groups = [
+    {"key": "health", "title": "دانش سلامت"},
+    {"key": "finance", "title": "علوم مالی و حسابداری"},
+    {"key": "engineering", "title": "علوم مهندسی"},
+    {"key": "it", "title": "فناوری اطلاعات و ارتباطات"},
+    {"key": "management", "title": "مدیریت و کسب و کار"}
+]
 
-print("Available departments:")
+print("\n================ Available Departments ================\n")
 for g in groups:
-    print(f"{g['key']}: {g['title']}")
+    print(f"{g['key']:15} | {g['title']}")
+print("\n=======================================================\n")
 
-# === 2) انتخاب دپارتمان ===
-target_dep = input("\nEnter the 'key' of department to filter: ")
+target_dep = input("Enter the 'key' of department to filter: ")
 
-# === 3) گرفتن دوره‌ها برای آن دپارتمان ===
 all_courses = []
 skip = 0
 batch_size = 9
@@ -37,7 +39,7 @@ while True:
         "skip": skip,
         "pSkip": 0,
         "type": "all",
-        "group": target_dep  # این فیلتر گروه هست
+        "group": target_dep
     }
 
     response = requests.post(BASE_URL, headers=headers, data=payload)
@@ -48,23 +50,31 @@ while True:
         break
 
     print(f"Fetched {len(data)} courses for dept={target_dep}, skip={skip}")
+
     for item in data:
+        # لینک واقعی سایت به دوره
+        if item.get("lessonId") and item.get("lessonUrl"):
+            course_link = f"https://mftplus.com/lesson/{item['lessonId']}/{item['lessonUrl']}"
+        else:
+            course_link = ""
+
         all_courses.append({
-            "title": item["title"],
-            "department": item["dep"],
-            "center": item["center"],
-            "teacher": item["author"],
-            "start_date": item["start"],
-            "end_date": item["end"],
-            "min_cost": item["minCost"],
-            "max_cost": item["maxCost"],
-            "days": " | ".join(item.get("days", []))
+            "title": item.get("title", ""),
+            "department": item.get("dep", ""),
+            "center": item.get("center", ""),
+            "teacher": item.get("author", ""),
+            "start_date": item.get("start", ""),
+            "end_date": item.get("end", ""),
+            "min_cost": item.get("minCost", ""),
+            "max_cost": item.get("maxCost", ""),
+            "days": " | ".join(item.get("days", [])),
+            "course_link": course_link
         })
 
     skip += batch_size
     time.sleep(0.5)
 
-# === ذخیره فایل CSV ===
+# ذخیره CSV
 df = pd.DataFrame(all_courses)
 filename = f"mft_courses_{target_dep}.csv"
 df.to_csv(filename, index=False, encoding="utf-8-sig")
