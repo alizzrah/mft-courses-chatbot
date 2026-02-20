@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>چت‌بات مجتمع فنی</title>
+    <link rel="stylesheet" href=".\static\style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>چت‌بات مجتمع فنی</h1>
+        <form method="post">
+            <textarea name="question" placeholder="سوال خود را اینجا وارد کنید..." required>{{ question }}</textarea>
+            <button type="submit">ارسال</button>
+        </form>
+
+        {% if answer %}
+        <div class="answer">
+            <h3>پاسخ:</h3>
+            <p>{{ answer.replace('\n','<br>')|safe }}</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
